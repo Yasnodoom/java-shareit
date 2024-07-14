@@ -12,16 +12,17 @@ import java.util.List;
 @RequestMapping("/items")
 public class ItemController {
     private final ItemServiceImp itemService;
+    private static final String X_SHARER_USER_ID = "X-Sharer-User-Id";
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ItemDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public ItemDto create(@RequestHeader(X_SHARER_USER_ID) Long userId,
                           @RequestBody final ItemDto item) {
         return itemService.create(item, userId);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto update(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public ItemDto update(@RequestHeader(X_SHARER_USER_ID) Long userId,
                           @PathVariable Long itemId,
                           @RequestBody final ItemDto item) {
         return itemService.update(item, itemId, userId);
@@ -33,7 +34,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemDto> getAll(@RequestHeader(X_SHARER_USER_ID) Long userId) {
         return itemService.getAll(userId);
     }
 

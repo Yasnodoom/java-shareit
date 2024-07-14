@@ -55,12 +55,16 @@ public class UserService {
     }
 
     private void validate(User user) {
-        if (user.getEmail() == null || user.getEmail().isEmpty() || user.getEmail().isBlank())
+        if (user.getEmail() == null)
+            throw new ValidationException("mail is empty");
+        if (user.getEmail().isEmpty() || user.getEmail().isBlank())
             throw new ValidationException("mail is empty");
         if (!user.getEmail().contains("@"))
             throw new ValidationException("mail must contains @");
-        if (user.getName() == null || user.getName().isEmpty() || user.getName().isBlank())
+        if (user.getName() == null)
             throw new ValidationException("login incorrect");
+        if (user.getName().isEmpty() || user.getName().isBlank())
+            throw new ValidationException("login is empty");
     }
 
     private void checkIfMailAlreadyExist(User user) {
