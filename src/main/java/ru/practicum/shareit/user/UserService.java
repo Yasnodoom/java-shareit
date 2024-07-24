@@ -5,53 +5,61 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.model.UserDto;
 
 import java.util.List;
 import java.util.Optional;
 
+import static ru.practicum.shareit.user.mapper.UserMapper.mapToUserDto;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final MemoryUserRepository userRepository;
+    private final UserRepository repository;
 
-    public List<User> getAll() {
-        return userRepository.findAll().stream().toList();
+    public List<UserDto> getAll() {
+        return repository
+                .findAll()
+                .stream()
+                .map(UserMapper::mapToUserDto)
+                .toList();
     }
 
-    public Optional<User> get(Long userId) {
-        return userRepository.find(userId);
+    public Optional<UserDto> get(Long userId) {
+        return repository.findById(userId).map(UserMapper::mapToUserDto);
     }
 
-    public User create(User user) {
+    public UserDto create(User user) {
         validate(user);
-        checkIfMailAlreadyExist(user);
+        validateIsEmailUnique(user);
 
-        user.setId(userRepository.nextId());
-        userRepository.create(user);
-        return user;
+        return mapToUserDto(repository.save(user));
     }
 
-    public User update(User newUser, Long userId) {
-        User oldUser = validateUserId(userId);
-        if (newUser.getEmail() != null && !oldUser.getEmail().equals(newUser.getEmail())) {
-            checkIfMailAlreadyExist(newUser);
-            oldUser.setEmail(newUser.getEmail());
+    public UserDto update(User newUser, Long userId) {
+        User existUser = findUserById(userId);
+
+        if (newUser.getEmail() != null && !existUser.getEmail().equals(newUser.getEmail())) {
+            validateIsEmailUnique(newUser);
+            existUser.setEmail(newUser.getEmail());
         }
-        if (newUser.getName() != null && !oldUser.getName().equals(newUser.getName())) {
-            oldUser.setName(newUser.getName());
+        if (newUser.getName() != null && !existUser.getName().equals(newUser.getName())) {
+            existUser.setName(newUser.getName());
         }
 
-        userRepository.update(oldUser);
-        return oldUser;
+        return mapToUserDto(repository.save(existUser));
     }
 
     public void delete(Long userId) {
-        userRepository.delete(userId);
+        repository.deleteById(userId);
     }
 
-    public User validateUserId(Long id) {
-        return userRepository.find(id).orElseThrow(() -> new NotFoundException(id));
+    public User findUserById(Long id) {
+        return repository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException(id));
     }
 
     private void validate(User user) {
@@ -67,8 +75,10 @@ public class UserService {
             throw new ValidationException("login is empty");
     }
 
-    private void checkIfMailAlreadyExist(User user) {
-        if (userRepository.getUsers().values().stream()
+    private void validateIsEmailUnique(User user) {
+        if (repository
+                .findAll()
+                .stream()
                 .map(User::getEmail)
                 .anyMatch(el -> el.equals(user.getEmail()))) {
             throw new DuplicateEmailException();

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.model.UserDto;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -15,23 +16,23 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public Collection<User> getAll() {
+    public Collection<UserDto> getAll() {
         return userService.getAll();
     }
 
     @GetMapping("/{userId}")
-    public Optional<User> get(@PathVariable Long userId) {
+    public Optional<UserDto> get(@PathVariable Long userId) {
         return userService.get(userId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(@RequestBody final User user) {
+    public UserDto create(@RequestBody final User user) {
         return userService.create(user);
     }
 
     @PatchMapping("/{userId}")
-    public User update(@RequestBody final User user, @PathVariable Long userId) {
+    public UserDto update(@RequestBody final User user, @PathVariable Long userId) {
         return userService.update(user, userId);
     }
 

@@ -11,7 +11,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/items")
 public class ItemController {
-    private final ItemServiceImp itemService;
+    private final ItemService itemService;
     private static final String X_SHARER_USER_ID = "X-Sharer-User-Id";
 
     @PostMapping
