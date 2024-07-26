@@ -42,4 +42,12 @@ public class ItemController {
     public List<ItemDto> find(@RequestParam String text) {
         return itemService.find(text);
     }
+
+    @PostMapping("/{itemId}/comment")
+    public void addComment(@RequestHeader(X_SHARER_USER_ID) Long userId,
+                           @PathVariable Long itemId,
+                           @RequestBody final String text) {
+        itemService.addComment(userId, itemId, text);
+    }
+
 }

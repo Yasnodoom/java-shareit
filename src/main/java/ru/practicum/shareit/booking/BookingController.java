@@ -31,7 +31,7 @@ public class BookingController {
     @PatchMapping("/{bookingId}")
     public BookingDto approved(@RequestHeader(X_SHARER_USER_ID) Long userId,
                                @PathVariable Long bookingId,
-                               @RequestParam Boolean approved) {
+                               @RequestParam boolean approved) {
         return bookingService.approved(userId, bookingId, approved);
     }
 

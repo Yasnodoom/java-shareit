@@ -1,12 +1,15 @@
 package ru.practicum.shareit.item.mapper;
 
 import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import ru.practicum.shareit.booking.CommentRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemMapper {
+    private static CommentRepository commentRepository;
+
     public static ItemDto mapToItemDto(Item item) {
         return ItemDto.builder()
                 .name(item.getName())
@@ -14,6 +17,7 @@ public class ItemMapper {
                 .available(item.getAvailable())
                 .ownerId(item.getOwnerId())
                 .requestId(item.getRequestId())
+                .comments(commentRepository.findAllByItemId(item.getId()))
                 .build();
     }
 

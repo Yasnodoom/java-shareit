@@ -2,11 +2,14 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.CommentRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.RightsException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserService;
 
@@ -20,6 +23,8 @@ import static ru.practicum.shareit.item.mapper.ItemMapper.mapToItemDto;
 public class ItemService {
     private final ItemRepository itemRepository;
     private final UserService userService;
+    private final CommentRepository commentRepository;
+    private final BookingRepository bookingRepository;
 
     public ItemDto create(ItemDto itemDto, Long userId) {
         userService.findUserById(userId);
@@ -64,6 +69,19 @@ public class ItemService {
                 .toList();
     }
 
+    public void addComment(Long userId, Long itemId, String text) {
+        if (!isUserBookingItem(findItemById(itemId))) {
+            throw new RightsException();
+        }
+        Comment comment = Comment
+                .builder()
+                .text(text)
+                .itemId(itemId)
+                .userId(userId)
+                .build();
+        commentRepository.save(comment);
+    }
+
     private Item updateItemFields(Item original, ItemDto update) {
         if (update.getName() != null && !update.getName().isEmpty()) {
             original.setName(update.getName());
@@ -94,6 +112,10 @@ public class ItemService {
         if (item.getOwnerId() != null && !item.getOwnerId().equals(userId)) {
             throw new RightsException();
         }
+    }
+
+    private boolean isUserBookingItem(Item item) {
+        return !bookingRepository.findAllByItemsAndState(List.of(item), "ALL").isEmpty();
     }
 
 }
