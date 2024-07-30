@@ -19,7 +19,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDuplicateEmailException(final DuplicateEmailException e) {
         return new ErrorResponse(e.getMessage());
     }

@@ -15,7 +15,6 @@ public class ItemController {
     private static final String X_SHARER_USER_ID = "X-Sharer-User-Id";
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     public ItemDto create(@RequestHeader(X_SHARER_USER_ID) Long userId,
                           @RequestBody final ItemDto item) {
         return itemService.create(item, userId);

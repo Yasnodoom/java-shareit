@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class ItemDto {
+public class ItemIdAndNameDto {
     private Long id;
     private String name;
     private String description;

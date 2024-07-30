@@ -27,11 +27,10 @@ public class ItemService {
     private final BookingRepository bookingRepository;
 
     public ItemDto create(ItemDto itemDto, Long userId) {
-        userService.findUserById(userId);
         validate(itemDto);
 
         Item item = ItemMapper.mapToItem(itemDto);
-        item.setOwnerId(userId);
+        item.setOwner(userService.findUserById(userId));
 
         return mapToItemDto(itemRepository.save(item));
     }
@@ -51,20 +50,20 @@ public class ItemService {
 
     public List<ItemDto> getAll(Long userId) {
         return itemRepository
-                .findByUserId(userId)
+                .findByOwnerId(userId)
                 .stream()
                 .map(ItemMapper::mapToItemDto)
                 .toList();
     }
 
     public List<ItemDto> find(String text) {
-        if (text.isEmpty()) {
+        if (text.isEmpty() || text.isBlank()) {
             return Collections.emptyList();
         }
         return itemRepository
-                .findByDescription(text)
+                .findByNameIgnoreCase(text)
                 .stream()
-                .filter(Item::getAvailable)
+                .filter(Item::isAvailable)
                 .map(ItemMapper::mapToItemDto)
                 .toList();
     }
@@ -82,6 +81,10 @@ public class ItemService {
         commentRepository.save(comment);
     }
 
+    public Item findItemById(Long id) {
+        return itemRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
+    }
+
     private Item updateItemFields(Item original, ItemDto update) {
         if (update.getName() != null && !update.getName().isEmpty()) {
             original.setName(update.getName());
@@ -95,10 +98,6 @@ public class ItemService {
         return original;
     }
 
-    private Item findItemById(Long id) {
-        return itemRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
-    }
-
     private void validate(ItemDto item) {
         if (item.getAvailable() == null)
             throw new ValidationException("available is empty");
@@ -109,13 +108,13 @@ public class ItemService {
     }
 
     private void verificationRights(Item item, Long userId) {
-        if (item.getOwnerId() != null && !item.getOwnerId().equals(userId)) {
+        if (item.getOwner() != null && !item.getOwner().getId().equals(userId)) {
             throw new RightsException();
         }
     }
 
     private boolean isUserBookingItem(Item item) {
-        return !bookingRepository.findAllByItemsAndState(List.of(item), "ALL").isEmpty();
+        return !bookingRepository.findAllByItemIdInAndStatus(List.of(item.getId()), "ALL").isEmpty();
     }
 
 }

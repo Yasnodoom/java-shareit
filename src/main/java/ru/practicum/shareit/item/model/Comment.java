@@ -6,7 +6,8 @@ import lombok.Data;
 
 @Data
 @Builder
-@Entity(name = "comments")
+@Entity
+@Table(name = "comments")
 public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -16,11 +17,9 @@ public class Comment {
     @Column(name = "comment_text")
     private String text;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @Column(name = "user_id")
     private Long userId;
 
-    @ManyToOne
-    @JoinColumn(name = "item_id")
+    @Column(name = "item_id")
     private Long itemId;
 }

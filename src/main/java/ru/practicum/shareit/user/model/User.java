@@ -1,15 +1,12 @@
 package ru.practicum.shareit.user.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.Objects;
 
-
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 @Getter
@@ -17,6 +14,7 @@ import java.util.Objects;
 @ToString
 @Builder
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
