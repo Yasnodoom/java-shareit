@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.item.model.Comment;
@@ -14,9 +13,7 @@ public class ItemDto {
     private String name;
     private String description;
     private Boolean available;
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long ownerId;
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long requestId;
     private List<Comment> comments;
 }

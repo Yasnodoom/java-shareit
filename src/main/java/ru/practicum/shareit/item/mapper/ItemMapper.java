@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.mapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemIdNameDto;
 import ru.practicum.shareit.item.model.Item;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -25,6 +26,14 @@ public class ItemMapper {
                 .description(itemDto.getDescription())
                 .available(itemDto.getAvailable())
                 .requestId(itemDto.getRequestId())
+                .build();
+    }
+
+    public static ItemIdNameDto toSmallItem(Item item) {
+        return ItemIdNameDto
+                .builder()
+                .id(item.getId())
+                .name(item.getName())
                 .build();
     }
 }
