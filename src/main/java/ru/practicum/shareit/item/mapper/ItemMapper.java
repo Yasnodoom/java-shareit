@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemIdNameDto;
+import ru.practicum.shareit.item.dto.ItemOwnerDto;
 import ru.practicum.shareit.item.model.Item;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -29,11 +30,22 @@ public class ItemMapper {
                 .build();
     }
 
-    public static ItemIdNameDto toSmallItem(Item item) {
+    public static ItemIdNameDto toIdNameItem(Item item) {
         return ItemIdNameDto
                 .builder()
                 .id(item.getId())
                 .name(item.getName())
+                .build();
+    }
+
+    public static ItemOwnerDto toItemOwnerDto(Item item) {
+        return ItemOwnerDto.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.isAvailable())
+                .ownerId(item.getOwner().getId())
+                .requestId(item.getRequestId())
                 .build();
     }
 }

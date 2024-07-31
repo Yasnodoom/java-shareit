@@ -4,19 +4,27 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.CommentRepository;
+import ru.practicum.shareit.booking.Status;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.RightsException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.BookingDatesDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemOwnerDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserService;
+import ru.practicum.shareit.user.model.User;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import static ru.practicum.shareit.item.dto.BookingItemDto.toBookingItemDto;
 import static ru.practicum.shareit.item.mapper.ItemMapper.mapToItemDto;
+import static ru.practicum.shareit.item.mapper.ItemMapper.toItemOwnerDto;
 
 @Service
 @RequiredArgsConstructor
@@ -44,8 +52,19 @@ public class ItemService {
         return mapToItemDto(oldItem);
     }
 
-    public ItemDto get(Long itemId) {
-        return mapToItemDto(findItemById(itemId));
+    public ItemOwnerDto get(Long itemId, Long userId) {
+        User user = userService.findUserById(userId);
+        Item item = findItemById(itemId);
+        ItemOwnerDto itemOwnerDto = toItemOwnerDto(item);
+        if (item.getOwner().equals(user)) {
+            Optional<BookingDatesDto> lastBooking = bookingRepository.findLastBookingByItemId(itemId);
+            lastBooking.ifPresent(el -> itemOwnerDto.setLastBooking(toBookingItemDto(el)));
+
+            Optional<BookingDatesDto> nextBooking = bookingRepository.findNextBookingByItemId(itemId);
+            nextBooking.ifPresent(el -> itemOwnerDto.setNextBooking(toBookingItemDto(el)));
+        }
+        itemOwnerDto.setComments(commentRepository.findAllByItemId(itemId));
+        return itemOwnerDto;
     }
 
     public List<ItemDto> getAll(Long userId) {
@@ -68,17 +87,31 @@ public class ItemService {
                 .toList();
     }
 
-    public void addComment(Long userId, Long itemId, String text) {
-        if (!isUserBookingItem(findItemById(itemId))) {
+    public Comment addComment(Long userId, Long itemId, String text) {
+        Item item = findItemById(itemId);
+        User user = userService.findUserById(userId);
+
+        if (!isUserBookingItem(userId, itemId)) {
             throw new RightsException();
         }
+
+        bookingRepository.findAllByItemId(itemId)
+                .stream()
+                .filter(el -> el.getStatus().equals(Status.APPROVED))
+                .filter(el -> el.getEnd().isAfter(LocalDateTime.now()))
+                .findAny()
+                .ifPresent(s -> {
+                    throw new ValidationException("cant comment while booking active");
+                });
+
         Comment comment = Comment
                 .builder()
                 .text(text)
-                .itemId(itemId)
-                .userId(userId)
+                .item(item)
+                .user(user)
+                .authorName(user.getName())
                 .build();
-        commentRepository.save(comment);
+        return commentRepository.save(comment);
     }
 
     public Item findItemById(Long id) {
@@ -113,8 +146,11 @@ public class ItemService {
         }
     }
 
-    private boolean isUserBookingItem(Item item) {
-        return !bookingRepository.findAllByItemIdInAndStatus(List.of(item.getId()), "ALL").isEmpty();
+    private boolean isUserBookingItem(Long userId, Long itemId) {
+        return bookingRepository
+                .findAllByItemId(itemId)
+                .stream()
+                .anyMatch(el -> el.getBooker().getId().equals(userId));
     }
 
 }
