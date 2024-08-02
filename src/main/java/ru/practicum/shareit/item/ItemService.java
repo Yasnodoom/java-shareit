@@ -56,6 +56,7 @@ public class ItemService {
         User user = userService.findUserById(userId);
         Item item = findItemById(itemId);
         ItemOwnerDto itemOwnerDto = toItemOwnerDto(item);
+
         if (item.getOwner().equals(user)) {
             Optional<BookingDatesDto> lastBooking = bookingRepository.findLastBookingByItemId(itemId);
             lastBooking.ifPresent(el -> itemOwnerDto.setLastBooking(toBookingItemDto(el)));

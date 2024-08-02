@@ -16,7 +16,6 @@ import ru.practicum.shareit.user.model.User;
 import java.util.Collections;
 import java.util.List;
 
-import static ru.practicum.shareit.booking.BookingController.ALL;
 import static ru.practicum.shareit.booking.BookingMapper.mapToBooking;
 import static ru.practicum.shareit.booking.BookingMapper.toBookingResponseDto;
 import static ru.practicum.shareit.booking.Status.*;
@@ -28,7 +27,6 @@ public class BookingService {
     private final ItemRepository itemRepository;
     private final ItemService itemService;
     private final UserService userService;
-
 
     public BookingResponseDto get(Long userId, Long bookingId) {
         Booking booking = findBookingById(bookingId);
