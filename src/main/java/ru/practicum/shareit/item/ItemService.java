@@ -1,14 +1,157 @@
 package ru.practicum.shareit.item;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.CommentRepository;
+import ru.practicum.shareit.booking.Status;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.RightsException;
+import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.BookingDatesDto;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemOwnerDto;
+import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.UserService;
+import ru.practicum.shareit.user.model.User;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public interface ItemService<T> {
-    T create(T data);
+import static ru.practicum.shareit.item.dto.BookingItemDto.toBookingItemDto;
+import static ru.practicum.shareit.item.mapper.ItemMapper.mapToItemDto;
+import static ru.practicum.shareit.item.mapper.ItemMapper.toItemOwnerDto;
 
-    T update(T data);
+@Service
+@RequiredArgsConstructor
+public class ItemService {
+    private final ItemRepository itemRepository;
+    private final UserService userService;
+    private final CommentRepository commentRepository;
+    private final BookingRepository bookingRepository;
 
-    Optional<T> get(Long id);
+    public ItemDto create(ItemDto itemDto, Long userId) {
+        validate(itemDto);
 
-    List<T> getAll();
+        Item item = ItemMapper.mapToItem(itemDto);
+        item.setOwner(userService.findUserById(userId));
+
+        return mapToItemDto(itemRepository.save(item));
+    }
+
+    public ItemDto update(ItemDto item, Long itemId, Long userId) {
+        Item oldItem = findItemById(itemId);
+        userService.findUserById(userId);
+        verificationRights(oldItem, userId);
+
+        itemRepository.save(updateItemFields(oldItem, item));
+        return mapToItemDto(oldItem);
+    }
+
+    public ItemOwnerDto get(Long itemId, Long userId) {
+        User user = userService.findUserById(userId);
+        Item item = findItemById(itemId);
+        ItemOwnerDto itemOwnerDto = toItemOwnerDto(item);
+
+        if (item.getOwner().equals(user)) {
+            Optional<BookingDatesDto> lastBooking = bookingRepository.findLastBookingByItemId(itemId);
+            lastBooking.ifPresent(el -> itemOwnerDto.setLastBooking(toBookingItemDto(el)));
+
+            Optional<BookingDatesDto> nextBooking = bookingRepository.findNextBookingByItemId(itemId);
+            nextBooking.ifPresent(el -> itemOwnerDto.setNextBooking(toBookingItemDto(el)));
+        }
+        itemOwnerDto.setComments(commentRepository.findAllByItemId(itemId));
+        return itemOwnerDto;
+    }
+
+    public List<ItemDto> getAll(Long userId) {
+        return itemRepository
+                .findByOwnerId(userId)
+                .stream()
+                .map(ItemMapper::mapToItemDto)
+                .toList();
+    }
+
+    public List<ItemDto> find(String text) {
+        if (text.isEmpty() || text.isBlank()) {
+            return Collections.emptyList();
+        }
+        return itemRepository
+                .findByNameIgnoreCase(text)
+                .stream()
+                .filter(Item::isAvailable)
+                .map(ItemMapper::mapToItemDto)
+                .toList();
+    }
+
+    public Comment addComment(Long userId, Long itemId, String text) {
+        Item item = findItemById(itemId);
+        User user = userService.findUserById(userId);
+
+        if (!isUserBookingItem(userId, itemId)) {
+            throw new RightsException();
+        }
+
+        bookingRepository.findAllByItemId(itemId)
+                .stream()
+                .filter(el -> el.getStatus().equals(Status.APPROVED))
+                .filter(el -> el.getEnd().isAfter(LocalDateTime.now()))
+                .findAny()
+                .ifPresent(s -> {
+                    throw new ValidationException("cant comment while booking active");
+                });
+
+        Comment comment = Comment
+                .builder()
+                .text(text)
+                .item(item)
+                .user(user)
+                .authorName(user.getName())
+                .build();
+        return commentRepository.save(comment);
+    }
+
+    public Item findItemById(Long id) {
+        return itemRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
+    }
+
+    private Item updateItemFields(Item original, ItemDto update) {
+        if (update.getName() != null && !update.getName().isEmpty()) {
+            original.setName(update.getName());
+        }
+        if (update.getDescription() != null && !update.getDescription().isEmpty()) {
+            original.setDescription(update.getDescription());
+        }
+        if (update.getAvailable() != null) {
+            original.setAvailable(update.getAvailable());
+        }
+        return original;
+    }
+
+    private void validate(ItemDto item) {
+        if (item.getAvailable() == null)
+            throw new ValidationException("available is empty");
+        if (item.getName() == null || item.getName().isEmpty() || item.getName().isBlank())
+            throw new ValidationException("name is empty");
+        if (item.getDescription() == null || item.getDescription().isEmpty() || item.getDescription().isBlank())
+            throw new ValidationException("description is empty");
+    }
+
+    private void verificationRights(Item item, Long userId) {
+        if (item.getOwner() != null && !item.getOwner().getId().equals(userId)) {
+            throw new RightsException();
+        }
+    }
+
+    private boolean isUserBookingItem(Long userId, Long itemId) {
+        return bookingRepository
+                .findAllByItemId(itemId)
+                .stream()
+                .anyMatch(el -> el.getBooker().getId().equals(userId));
+    }
+
 }
