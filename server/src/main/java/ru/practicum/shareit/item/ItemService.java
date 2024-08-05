@@ -119,6 +119,10 @@ public class ItemService {
         return itemRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
     }
 
+    public List<Item> findItemsByRequestId(Long requestId) {
+        return itemRepository.findByRequestId(requestId);
+    }
+
     private Item updateItemFields(Item original, ItemDto update) {
         if (update.getName() != null && !update.getName().isEmpty()) {
             original.setName(update.getName());
