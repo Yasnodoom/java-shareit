@@ -20,6 +20,7 @@ public class ItemRequestService {
     private final ItemRequestRepository repository;
     private final UserService userService;
     private final ItemService itemService;
+    private static final String CREATED = "created";
 
     public ItemRequestDto create(ItemRequestDto requestDto, Long requesterId) {
         ItemRequest request = ItemRequestMapper.toRequest(requestDto);
@@ -35,16 +36,19 @@ public class ItemRequestService {
     }
 
     public List<ItemRequestDto> findPersonal(Long id) {
-        return repository.findAllByRequesterId(id)
+        List<ItemRequestDto> requestsDto = repository
+                .findAllByRequesterId(id)
                 .stream()
                 .map(ItemRequestMapper::toDto)
-                .peek(item -> item.setItems(itemService.findItemsByRequestId(item.getId())))
                 .toList();
+        requestsDto.forEach(r -> r.setItems(itemService.findItemsByRequestId(r.getId())));
+
+        return requestsDto;
     }
 
     public List<ItemRequestDto> findAll(Integer from, Integer size) {
         return repository
-                .findAll(PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created")))
+                .findAll(PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, CREATED)))
                 .stream()
                 .map(ItemRequestMapper::toDto)
                 .toList();

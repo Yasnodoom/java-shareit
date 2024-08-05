@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserDto;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static ru.practicum.shareit.user.mapper.UserMapper.mapToUserDto;
+import static ru.practicum.shareit.user.mapper.UserMapper.toUser;
 
 @Service
 @RequiredArgsConstructor
@@ -28,17 +28,18 @@ public class UserService {
     }
 
     public Optional<UserDto> get(Long userId) {
-        return repository.findById(userId).map(UserMapper::mapToUserDto);
+        return repository
+                .findById(userId)
+                .map(UserMapper::mapToUserDto);
     }
 
-    public UserDto create(User user) {
-        validate(user);
-        validateIsEmailUnique(user);
+    public UserDto create(UserDto dto) {
+        validateIsEmailUnique(dto);
 
-        return mapToUserDto(repository.save(user));
+        return mapToUserDto(repository.save(toUser(dto)));
     }
 
-    public UserDto update(User newUser, Long userId) {
+    public UserDto update(UserDto newUser, Long userId) {
         User existUser = findUserById(userId);
 
         if (newUser.getEmail() != null && !existUser.getEmail().equals(newUser.getEmail())) {
@@ -62,26 +63,16 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException(id));
     }
 
-    private void validate(User user) {
-        if (user.getEmail() == null)
-            throw new ValidationException("mail is empty");
-        if (user.getEmail().isEmpty() || user.getEmail().isBlank())
-            throw new ValidationException("mail is empty");
-        if (!user.getEmail().contains("@"))
-            throw new ValidationException("mail must contains @");
-        if (user.getName() == null)
-            throw new ValidationException("login incorrect");
-        if (user.getName().isEmpty() || user.getName().isBlank())
-            throw new ValidationException("login is empty");
-    }
-
-    private void validateIsEmailUnique(User user) {
-        if (repository
+    private void validateIsEmailUnique(UserDto user) {
+        repository
                 .findAll()
                 .stream()
                 .map(User::getEmail)
-                .anyMatch(el -> el.equals(user.getEmail()))) {
-            throw new DuplicateEmailException();
-        }
+                .filter(el -> el.equals(user.getEmail()))
+                .findAny()
+                .ifPresent(s -> {
+                    throw new DuplicateEmailException();
+                });
     }
+
 }

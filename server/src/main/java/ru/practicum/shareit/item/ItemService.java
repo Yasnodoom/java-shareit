@@ -8,7 +8,6 @@ import ru.practicum.shareit.booking.Status;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.RightsException;
 import ru.practicum.shareit.exception.ValidationException;
-import ru.practicum.shareit.item.dto.BookingDatesDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemOwnerDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
@@ -20,7 +19,6 @@ import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static ru.practicum.shareit.item.dto.BookingItemDto.toBookingItemDto;
 import static ru.practicum.shareit.item.mapper.ItemMapper.mapToItemDto;
@@ -35,8 +33,6 @@ public class ItemService {
     private final BookingRepository bookingRepository;
 
     public ItemDto create(ItemDto itemDto, Long userId) {
-        validate(itemDto);
-
         Item item = ItemMapper.mapToItem(itemDto);
         item.setOwner(userService.findUserById(userId));
 
@@ -58,13 +54,15 @@ public class ItemService {
         ItemOwnerDto itemOwnerDto = toItemOwnerDto(item);
 
         if (item.getOwner().equals(user)) {
-            Optional<BookingDatesDto> lastBooking = bookingRepository.findLastBookingByItemId(itemId);
-            lastBooking.ifPresent(el -> itemOwnerDto.setLastBooking(toBookingItemDto(el)));
-
-            Optional<BookingDatesDto> nextBooking = bookingRepository.findNextBookingByItemId(itemId);
-            nextBooking.ifPresent(el -> itemOwnerDto.setNextBooking(toBookingItemDto(el)));
+            bookingRepository
+                    .findLastBookingByItemId(itemId)
+                    .ifPresent(el -> itemOwnerDto.setLastBooking(toBookingItemDto(el)));
+            bookingRepository
+                    .findNextBookingByItemId(itemId)
+                    .ifPresent(el -> itemOwnerDto.setNextBooking(toBookingItemDto(el)));
         }
         itemOwnerDto.setComments(commentRepository.findAllByItemId(itemId));
+
         return itemOwnerDto;
     }
 
@@ -112,11 +110,14 @@ public class ItemService {
                 .user(user)
                 .authorName(user.getName())
                 .build();
+
         return commentRepository.save(comment);
     }
 
     public Item findItemById(Long id) {
-        return itemRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
+        return itemRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException(id));
     }
 
     public List<Item> findItemsByRequestId(Long requestId) {
@@ -124,25 +125,11 @@ public class ItemService {
     }
 
     private Item updateItemFields(Item original, ItemDto update) {
-        if (update.getName() != null && !update.getName().isEmpty()) {
-            original.setName(update.getName());
-        }
-        if (update.getDescription() != null && !update.getDescription().isEmpty()) {
-            original.setDescription(update.getDescription());
-        }
-        if (update.getAvailable() != null) {
-            original.setAvailable(update.getAvailable());
-        }
-        return original;
-    }
+        original.setName(update.getName());
+        original.setDescription(update.getDescription());
+        original.setAvailable(update.getAvailable());
 
-    private void validate(ItemDto item) {
-        if (item.getAvailable() == null)
-            throw new ValidationException("available is empty");
-        if (item.getName() == null || item.getName().isEmpty() || item.getName().isBlank())
-            throw new ValidationException("name is empty");
-        if (item.getDescription() == null || item.getDescription().isEmpty() || item.getDescription().isBlank())
-            throw new ValidationException("description is empty");
+        return original;
     }
 
     private void verificationRights(Item item, Long userId) {
