@@ -30,7 +30,7 @@ public class ItemRequestService {
 
     public ItemRequestDto getOne(Long id) {
         ItemRequestDto dto = toDto(findItemRequestById(id));
-        dto.setItemList(itemService.findItemsByRequestId(id));
+        dto.setItems(itemService.findItemsByRequestId(id));
         return dto;
     }
 
@@ -38,7 +38,7 @@ public class ItemRequestService {
         return repository.findAllByRequesterId(id)
                 .stream()
                 .map(ItemRequestMapper::toDto)
-                .peek(item -> item.setItemList(itemService.findItemsByRequestId(item.getId())))
+                .peek(item -> item.setItems(itemService.findItemsByRequestId(item.getId())))
                 .toList();
     }
 
