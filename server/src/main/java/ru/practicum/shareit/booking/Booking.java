@@ -1,4 +1,4 @@
-package ru.practicum.shareit.bookingold;
+package ru.practicum.shareit.booking;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
