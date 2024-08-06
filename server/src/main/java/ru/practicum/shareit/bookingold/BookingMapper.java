@@ -1,9 +1,9 @@
-package ru.practicum.shareit.booking;
+package ru.practicum.shareit.bookingold;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import ru.practicum.shareit.booking.dto.BookingRequestDto;
-import ru.practicum.shareit.booking.dto.BookingResponseDto;
+import ru.practicum.shareit.bookingold.dto.BookingRequestDto;
+import ru.practicum.shareit.bookingold.dto.BookingResponseDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.user.mapper.UserMapper;
 

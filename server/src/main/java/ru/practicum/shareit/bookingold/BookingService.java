@@ -1,9 +1,9 @@
-package ru.practicum.shareit.booking;
+package ru.practicum.shareit.bookingold;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.dto.BookingRequestDto;
-import ru.practicum.shareit.booking.dto.BookingResponseDto;
+import ru.practicum.shareit.bookingold.dto.BookingRequestDto;
+import ru.practicum.shareit.bookingold.dto.BookingResponseDto;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.RightsException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -16,9 +16,9 @@ import ru.practicum.shareit.user.model.User;
 import java.util.Collections;
 import java.util.List;
 
-import static ru.practicum.shareit.booking.BookingMapper.mapToBooking;
-import static ru.practicum.shareit.booking.BookingMapper.toBookingResponseDto;
-import static ru.practicum.shareit.booking.Status.*;
+import static ru.practicum.shareit.bookingold.BookingMapper.mapToBooking;
+import static ru.practicum.shareit.bookingold.BookingMapper.toBookingResponseDto;
+import static ru.practicum.shareit.bookingold.Status.*;
 
 @Service
 @RequiredArgsConstructor

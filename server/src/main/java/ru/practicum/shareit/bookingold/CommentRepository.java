@@ -1,4 +1,4 @@
-package ru.practicum.shareit.booking;
+package ru.practicum.shareit.bookingold;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import ru.practicum.shareit.item.model.Comment;

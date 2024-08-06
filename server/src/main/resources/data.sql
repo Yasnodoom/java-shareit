@@ -1,8 +1,9 @@
 DELETE FROM comments;
 DELETE FROM bookings;
 DELETE FROM items;
-DELETE FROM users;
 DELETE FROM requests;
+DELETE FROM users;
+
 
 ALTER TABLE comments ALTER COLUMN comment_id RESTART WITH 1;
 ALTER TABLE bookings ALTER COLUMN booking_id RESTART WITH 1;
