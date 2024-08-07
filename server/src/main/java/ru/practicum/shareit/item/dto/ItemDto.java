@@ -2,15 +2,14 @@ package ru.practicum.shareit.item.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NonNull;
+import lombok.*;
 import ru.practicum.shareit.item.model.Comment;
 
 import java.util.List;
 
 @Data
 @Builder
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class ItemDto {
     private Long id;
 

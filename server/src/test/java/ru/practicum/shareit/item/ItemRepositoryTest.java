@@ -1,4 +1,4 @@
-package ru.practicum.shareit.booking;
+package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.AfterEach;
@@ -7,25 +7,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import ru.practicum.shareit.item.ItemRepository;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.Status;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Optional;
 
-import static java.util.Collections.singletonList;
-
 @DataJpaTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class BookingRepositoryTest {
-    private final BookingRepository bookingRepository;
-    private final UserRepository userRepository;
+class ItemRepositoryTest {
     private final ItemRepository itemRepository;
 
-    private User user;
-    private Item item;
     private Booking booking;
+    private Item item;
+    private User user;
 
     @BeforeEach
     void setUp() {
@@ -35,51 +31,39 @@ class BookingRepositoryTest {
 
         item = new Item();
         item.setName("item name");
+        item.setAvailable(true);
+        item.setRequestId(1L);
 
         booking = new Booking();
         booking.setBooker(user);
         booking.setItem(item);
         booking.setStatus(Status.APPROVED);
-
-        itemRepository.save(item);
-        userRepository.save(user);
-
     }
 
     @AfterEach
     void tearDown() {
-        userRepository.deleteAll();
-        bookingRepository.deleteAll();
         itemRepository.deleteAll();
     }
 
     @Test
     void create() {
-        bookingRepository.save(booking);
-        long result = bookingRepository.count();
+        itemRepository.save(item);
+        long result = itemRepository.count();
         Assertions.assertEquals(1, result);
     }
 
     @Test
     void delete() {
-        long id = bookingRepository.save(booking).getId();
-        bookingRepository.deleteById(id);
-        long result = bookingRepository.count();
+        long id = itemRepository.save(item).getId();
+        itemRepository.deleteById(id);
+        long result = itemRepository.count();
         Assertions.assertEquals(0, result);
     }
 
     @Test
     void get() {
-        long id = bookingRepository.save(booking).getId();
-        Optional<Booking> b = bookingRepository.findById(id);
+        long id = itemRepository.save(item).getId();
+        Optional<Item> b = itemRepository.findById(id);
         Assertions.assertTrue(b.isPresent());
     }
-
-    @Test
-    void findAllByItemIdIn() {
-        bookingRepository.save(booking);
-        int size = bookingRepository.findAllByItemIdIn(singletonList(item.getId())).size();
-        Assertions.assertEquals(1, size);
-    }
-
 }
